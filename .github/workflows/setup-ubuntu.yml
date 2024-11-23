@@ -1,0 +1,32 @@
+name: Setup Ubuntu VM on Google Cloud
+
+on:
+  push:
+    branches:
+      - main  # یا هر برنچی که مدنظر دارید
+
+jobs:
+  setup-vm:
+    runs-on: ubuntu-latest  # این به معنی استفاده از محیط Ubuntu برای اجرای مراحل است
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2  # این مرحله برای چک‌اوت کردن کد از ریپازیتوری گیت‌هاب است
+    
+    - name: Set up Google Cloud
+      uses: google-github-actions/setup-gcloud@v0  # این مرحله برای تنظیم Google Cloud SDK است
+      with:
+        project_id: ${{ secrets.GCLOUD_PROJECT }}  # پروژه Google Cloud شما
+        credentials_json: ${{ secrets.GCLOUD_CREDENTIALS }}  # اعتبارنامه‌های سرویس گوگل
+
+    - name: Create VM Instance on Google Cloud
+      run: |
+        gcloud compute instances create ubuntu-vm \
+          --image-family=ubuntu-2004-lts \
+          --image-project=ubuntu-os-cloud \
+          --zone=us-central1-a \
+          --machine-type=e2-medium
+        
+    - name: SSH into VM and Install Dependencies
+      run: |
+        gcloud compute ssh ubuntu-vm --zone=us-central1-a --command "sudo apt update && sudo apt install -y curl"
